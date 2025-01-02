@@ -1,10 +1,10 @@
 export class BloomFilter {
-    private readonly m: number;
-    private readonly k: number;
-    private readonly bitArray: Uint8Array;
-    private readonly seeds: number[];
+    private m: number;
+    private k: number;
+    private bitArray: Uint8Array;
+    private seeds: number[];
   
-    constructor(n: number, p: number, seedBase?: number) {
+    constructor(n: number, p: number) {
         if (n <= 0) {
             throw new Error("n must be > 0");
         }
@@ -25,15 +25,35 @@ export class BloomFilter {
         // 3. create a bit array of length m
         this.bitArray = new Uint8Array(this.m);
     
-        // 4. generate k random seeds
-        this.seeds = Array.from({ length: this.k }, (_, i) => {
-            if (typeof seedBase !== "undefined") {
-                // a simple formula
-                return (seedBase + i * 13_777) % this.m;
-            }
-            
-            return Math.floor(Math.random() * this.m);
-        });
+        // 4. generate k seeds
+        this.seeds = this.generateDeterministicSeeds(this.k);
+    }
+
+    private generateDeterministicSeeds(k: number, primeStart = 17): number[] {
+        const seeds: number[] = [];
+        let prime = primeStart;
+        
+        for (let i = 0; i < k; i++) {
+          seeds.push(prime);
+          prime += 17;
+        }
+
+        return seeds;
+    }
+
+    public static fromStorage(
+        m: number,
+        k: number,
+        seeds: number[],
+        bitArray: Uint8Array
+    ): BloomFilter {
+        // create an "empty" object that delegates to BloomFilter.prototype
+        const instance = Object.create(BloomFilter.prototype) as BloomFilter;
+        instance.m = m;
+        instance.k = k;
+        instance.seeds = seeds;
+        instance.bitArray = bitArray;
+        return instance;
     }
   
     private hashFnv1a(value: string, seed: number): number {

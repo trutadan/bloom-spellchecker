@@ -1,4 +1,5 @@
 import { BloomFilter } from '../models/BloomFilter';
+import { readDictionaryFromFile } from '../utils';
 
 describe('BloomFilter', () => {
     it("should create a bloom filter with correct parameters", () => {
@@ -9,14 +10,18 @@ describe('BloomFilter', () => {
 
         expect(bloomFilter.getM()).toBe(479253);
         expect(bloomFilter.getBitArray().length).toBe(479253);
+
+        expect(bloomFilter.getBitArray().every(bit => bit === 0)).toBe(true);
     });
 
     it("should contain the initially added words", () => {
         const bloomFilter = new BloomFilter(100000, 0.1);
 
-        expect(bloomFilter.contains("hello")).toBe(false);
-        expect(bloomFilter.contains("world")).toBe(false);
-        expect(bloomFilter.contains("testing")).toBe(false);
+        readDictionaryFromFile(bloomFilter, 'words');
+
+        expect(bloomFilter.contains("hello")).toBe(true);
+        expect(bloomFilter.contains("world")).toBe(true);
+        expect(bloomFilter.contains("testing")).toBe(true);
     });
 
     it("should NOT contain words that were not added", () => {
